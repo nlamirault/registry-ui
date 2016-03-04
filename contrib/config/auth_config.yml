@@ -1,0 +1,35 @@
+server:  # Server settings.
+  # Address to listen on.
+  addr: ":5001"
+  # TLS certificate and key.
+  certificate: "/ssl/server.pem"
+  key: "/ssl/server.key"
+
+token:  # Settings for the tokens.
+  issuer: "auth_service"  # Must match issuer in the Registry config.
+  expiration: 900
+
+
+# Static user map.
+users:
+  # Password is specified as a BCrypt hash. Use htpasswd -nbB <username> <password> to generate.
+  "devops-team":
+    password: "$2y$05$qvO1BVml.zOXfKgp5ZLKie1DoL8xo5c3IbkiVHzwisLyFqlzqLFLa"
+  "jgsqware":
+    password: "$2y$05$oGKwJ8QJDLBOoTBmC/EQiefIMV1N9Yt9jpX3SqMoRqZRRql6q7yym"
+  "": {}
+
+acl:
+  # Admin has full access to everything.
+  - match: {account: "devops-team"}
+    actions: ["*"]
+  # Logged-Users have full right on their repository
+  - match: {account: "/.+/", name: "${account}/*"}
+    actions: ["*"]
+  # Non-logged users can pull images
+  - match: {account: "", name: "devops-team/busybox"}
+    actions: ["pull"]
+    comment: "Anonymous users can pull everything."
+  - match: {type: "registry", name: "catalog"}
+    actions: ["*"]
+    comment: "Anonymous users can pull everything."
