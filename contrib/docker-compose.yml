@@ -30,8 +30,6 @@ services:
       context: ..
     ports:
       - 5080:8080
-    volumes:
-      - $GOPATH:/go
     environment:
       - REGISTRYUI_HUB_URI=registry:5000
 

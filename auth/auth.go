@@ -48,7 +48,6 @@ func Authenticate(dockerResponse *http.Response, request *http.Request) error {
 	if err != nil {
 		return err
 	}
-
 	var tok token
 	err = json.Unmarshal(body, &tok)
 

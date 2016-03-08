@@ -20,22 +20,38 @@ const views = "views/"
 const catalogTplt = `
 Repositories [{{.Repositories | len}}]:
 	{{range $key, $value := .Repositories}} ➜ {{$key}} [{{$value | len}}]:
-		{{range $value}} ➜ {{if ne $key "-"}}{{$key}}/{{end}}{{.}}
+		{{range $value}} ➜ {{.Name}}
+			➜ Tags:{{.Tags}}
 		{{end}}
 	{{end}}
 `
 
 var registryURI string
 
-// {{range .Repositories}} ➜ {{.}}
-// {{end}}
+type image struct {
+	Name string   `json:"name"`
+	Tags []string `json:"tags"`
+}
+
 type catalog struct {
 	Registry     string
-	Repositories map[string][]string
+	Repositories map[string][]image
 }
 
 type _catalog struct {
 	Repositories []string `json:"repositories"`
+}
+
+type action interface {
+	GetAction() string
+}
+
+func (_catalog) GetAction() string {
+	return "_catalog"
+}
+
+func (image) GetAction() string {
+	return "image"
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p interface{}) error {
@@ -108,8 +124,16 @@ func main() {
 
 }
 
-func GetCatalog() catalog {
-	req, err := http.NewRequest("GET", "http://"+registryURI+"/v2/_catalog", nil)
+func ToIndentJSON(v interface{}) ([]byte, error) {
+	b, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func doRequest(method string, uri string) []byte {
+	req, err := http.NewRequest(method, uri, nil)
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -135,20 +159,37 @@ func GetCatalog() catalog {
 		log.Fatalf("reading body: %v", err)
 	}
 
+	return b
+}
+
+func GetCatalog() catalog {
 	var d _catalog
+	b := doRequest("GET", "http://"+registryURI+"/v2/_catalog")
 	if err := json.Unmarshal(b, &d); err != nil {
 		log.Fatalf("marshalling result: err")
 	}
 
 	var c catalog
-	c.Repositories = make(map[string][]string)
+	c.Registry = registryURI
+	c.Repositories = make(map[string][]image)
 	for _, repository := range d.Repositories {
 		if strings.Contains(repository, "/") {
 			r := strings.Split(repository, "/")
-			c.Repositories[r[0]] = append(c.Repositories[r[0]], r[1])
+			c.Repositories[r[0]] = append(c.Repositories[r[0]], GetTags(repository))
 		} else {
-			c.Repositories["-"] = append(c.Repositories["-"], repository)
+			c.Repositories["-"] = append(c.Repositories["-"], GetTags(repository))
 		}
 	}
 	return c
+}
+
+func GetTags(imageName string) image {
+	var i image
+	b := doRequest("GET", "http://"+registryURI+"/v2/"+imageName+"/tags/list")
+
+	if err := json.Unmarshal(b, &i); err != nil {
+		log.Fatalf("marshalling result: err")
+	}
+	return i
+
 }

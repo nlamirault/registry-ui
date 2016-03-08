@@ -27,9 +27,9 @@ acl:
   - match: {account: "/.+/", name: "${account}/*"}
     actions: ["*"]
   # Non-logged users can pull images
-  - match: {account: "", name: "devops-team/busybox"}
-    actions: ["pull"]
-    comment: "Anonymous users can pull everything."
   - match: {type: "registry", name: "catalog"}
     actions: ["*"]
+    comment: "Anonymous users can get catalog."
+  - match: {account: "", name: "/.*/"}
+    actions: ["pull"]
     comment: "Anonymous users can pull everything."

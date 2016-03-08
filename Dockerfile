@@ -1,2 +1,3 @@
-FROM golang:1.6-onbuild
-EXPOSE 8080
+FROM scratch
+COPY registry-ui /
+CMD ["/registry-ui"]

@@ -27,6 +27,7 @@
             {{.Repositories | len}} Repositories:
   				</h2>
   			</div>
+        {{$reg := .Registry}}
         {{range $account, $repos := .Repositories}}
         <div class="row">
           <div class="col-md-12">
@@ -38,7 +39,12 @@
                 <div id="panel-element-{{$account}}" class="panel-collapse collapse">
                   <div class="panel-body">
                     {{range $repos}}
-                      <p> {{if ne $account "-"}}{{$account}}/{{end}}{{.}} ➜ <code>docker pull localhost:5000/{{if ne $account "-"}}{{$account}}/{{end}}{{.}}</code></p>
+                      <p> {{.Name}} ➜ <code>docker pull {{$reg}}/{{.Name}}</code></p>
+                      <p>Tags:</p>
+                      {{$n := .Name}}
+                      {{range .Tags}}
+                      <p> - {{.}} ➜ <code>docker pull {{$reg}}/{{$n}}:{{.}}</code></p>
+                      {{end}}
                     {{end}}
                   <div>
                 </div>
