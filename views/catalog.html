@@ -26,6 +26,11 @@
           <h2>
             {{.Repositories | len}} Repositories:
   				</h2>
+          {{if .AccountMgmt}}
+          <div>
+            AccountMgmt
+          </div>
+          {{end}}
   			</div>
         {{$reg := .Registry}}
         {{range $account, $repos := .Repositories}}

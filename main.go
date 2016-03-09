@@ -34,6 +34,7 @@ type image struct {
 }
 
 type catalog struct {
+	AccountMgmt  bool
 	Registry     string
 	Repositories map[string][]image
 }
@@ -92,6 +93,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
 	viper.SetEnvPrefix("registryui")
 	viper.SetDefault("port", 8080)
 	viper.AutomaticEnv()
@@ -99,6 +101,13 @@ func main() {
 	registryURI = viper.GetString("hub_uri")
 	if registryURI == "" {
 		log.Fatalln("no registry uri provided")
+	}
+
+	if viper.GetBool("account_mgmt_enabled") {
+		if viper.GetString("account_mgmt_config") == "" {
+			log.Fatalln("account management enabled but no config file")
+		}
+		auth.ReadConfig(viper.GetString("account_mgmt_config"))
 	}
 
 	http.DefaultClient.Transport = &http.Transport{
@@ -170,6 +179,7 @@ func GetCatalog() catalog {
 	}
 
 	var c catalog
+	c.AccountMgmt = viper.GetBool("account_mgmt_enabled")
 	c.Registry = registryURI
 	c.Repositories = make(map[string][]image)
 	for _, repository := range d.Repositories {
