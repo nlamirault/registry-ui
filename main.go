@@ -146,6 +146,8 @@ func main() {
 	router.Path("/catalog").HandlerFunc(catalogHandler).Methods("GET")
 	router.Path("/").HandlerFunc(indexHandler).Methods("GET")
 	router.Path("/users").HandlerFunc(usersHandler).Methods("GET", "POST")
+	router.PathPrefix("/css").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir("./views/static/css"))))
+	router.PathPrefix("/styles").Handler(http.StripPrefix("/styles/", http.FileServer(http.Dir("./views/static/styles"))))
 	http.Handle("/", router)
 	http.ListenAndServe(s, nil)
 
