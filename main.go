@@ -110,8 +110,9 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 				log.Fatalf("adding user '%v': %v", u, err)
 			}
 		}
+		http.Redirect(w, r, "/users", http.StatusFound)
 	}
-	http.Redirect(w, r, "/users", http.StatusFound)
+
 }
 
 func main() {
