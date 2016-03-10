@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/gorilla/mux"
 	"github.com/jgsqware/registry-ui/auth"
 	"github.com/spf13/viper"
 )
@@ -78,18 +79,39 @@ func loadPage(p string) interface{} {
 	}
 }
 
-func viewHandler(w http.ResponseWriter, r *http.Request) {
-	page := strings.TrimRight(r.URL.Path[len("/"):], "/")
-	p := loadPage(page)
-	if p == nil {
-		http.Redirect(w, r, "/notfound", http.StatusNotFound)
-		return
-	}
-	err := renderTemplate(w, page, p)
+func catalogHandler(w http.ResponseWriter, r *http.Request) {
+	err := renderTemplate(w, "catalog", GetCatalog())
 	if err != nil {
-		log.Printf("%s handler: %v", page, err)
+		log.Printf("catalog handler: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func usersHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		err := renderTemplate(w, "users", auth.Config)
+		if err != nil {
+			log.Fatalf("rendering users: %v", err)
+		}
+	case http.MethodPost:
+		action := r.FormValue("method")
+		switch action {
+		case "delete":
+			u := r.FormValue("username")
+			err := auth.DeleteUser(u)
+			if err != nil {
+				log.Fatalf("deleting user '%v': %v", u, err)
+			}
+		case "add":
+			u, p := r.FormValue("username"), r.FormValue("password")
+			err := auth.AddUser(u, p)
+			if err != nil {
+				log.Fatalf("adding user '%v': %v", u, err)
+			}
+		}
+	}
+	http.Redirect(w, r, "/users", http.StatusFound)
 }
 
 func main() {
@@ -128,7 +150,11 @@ func main() {
 	}
 	s := fmt.Sprintf(":%d", viper.GetInt("port"))
 	log.Printf("Starting Server on %s\n", s)
-	http.HandleFunc("/", viewHandler)
+
+	router := mux.NewRouter()
+	router.Path("/catalog").HandlerFunc(catalogHandler).Methods("GET")
+	router.Path("/users").HandlerFunc(usersHandler).Methods("GET", "POST")
+	http.Handle("/", router)
 	http.ListenAndServe(s, nil)
 
 }

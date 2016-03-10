@@ -14,8 +14,9 @@ import (
 
 var (
 	ErrAlreadyExists = errors.New("account already exists")
+	ErrNotExists     = errors.New("account not exists")
 	ConfigFile       string
-	config           server.Config
+	Config           server.Config
 )
 
 func AddUser(account string, password string) error {
@@ -29,18 +30,38 @@ func AddUser(account string, password string) error {
 	r := authn.Requirements{}
 	r.Password = &p
 
-	if _, ok := config.Users[account]; ok {
+	if _, ok := Config.Users[account]; ok {
 		return ErrAlreadyExists
 	}
 
-	config.Users[account] = &r
+	Config.Users[account] = &r
 
-	b, err := yaml.Marshal(config)
+	b, err := yaml.Marshal(Config)
 	if err != nil {
 		log.Fatalf("marshalling auth config: %v", err)
 	}
 
-	ioutil.WriteFile("./contrib/config/auth_config.yml", b, 0755)
+	ioutil.WriteFile(ConfigFile, b, 0755)
+	return nil
+}
+
+func DeleteUser(account string) error {
+	if _, ok := Config.Users[account]; !ok {
+		return ErrNotExists
+	}
+
+	if account == "" {
+		return fmt.Errorf("cannot delete anonymous account")
+	}
+
+	delete(Config.Users, account)
+
+	b, err := yaml.Marshal(Config)
+	if err != nil {
+		log.Fatalf("marshalling auth config: %v", err)
+	}
+
+	ioutil.WriteFile(ConfigFile, b, 0755)
 	return nil
 }
 
@@ -51,7 +72,7 @@ func ReadConfig(configFile string) error {
 	if err != nil {
 		return fmt.Errorf("reading yml file: %v", err)
 	}
-	err = yaml.Unmarshal(b, &config)
+	err = yaml.Unmarshal(b, &Config)
 	if err != nil {
 		return fmt.Errorf("unmarshalling config: %v", err)
 	}

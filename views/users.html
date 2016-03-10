@@ -21,39 +21,48 @@
       <div class="col-md-6">
   			<div class="page-header">
   				<h1>
-  					Docker Registry
+  					Docker Registry - Users
           </h1>
-          <h2>
-            {{.Repositories | len}} Repositories:
-  				</h2>
   			</div>
-        {{if .AccountMgmt}}<a href="/users">Accounts</a>{{end}}
-        {{$reg := .Registry}}
-        {{range $account, $repos := .Repositories}}
         <div class="row">
-          <div class="col-md-12">
-            <div class="panel-group" id="panel-master-{{$account}}">
-              <div class="panel panel-default">
-                <div class="panel-heading">
-  								 <a class="panel-title collapsed" data-toggle="collapse" data-parent="#panel-master-{{$account}}" href="#panel-element-{{$account}}">{{$account}} <span class="badge pull-right">{{$repos | len}}</span></a>
-  							</div>
-                <div id="panel-element-{{$account}}" class="panel-collapse collapse">
-                  <div class="panel-body">
-                    {{range $repos}}
-                      <p> {{.Name}} ➜ <code>docker pull {{$reg}}/{{.Name}}</code></p>
-                      <p>Tags:</p>
-                      {{$n := .Name}}
-                      {{range .Tags}}
-                      <p> - {{.}} ➜ <code>docker pull {{$reg}}/{{$n}}:{{.}}</code></p>
-                      {{end}}
-                    {{end}}
-                  <div>
-                </div>
-              </div>
+          <div class="col-md-6">
+            Users:
+            <ul>
+              {{range $name,$p := .Users}}
+              <li>
+                {{if eq $name ""}}Anonymous{{else}}{{$name}}{{end}}<form action="/users" method="POST"><input type="hidden" name="method" value="delete"><input type="hidden" name="username" value="{{$name}}"></input><input type="submit" value="delete"></input></form>
+              </li>
+              {{end}}
+            </ul>
+            <div>
+              <form action="/users" method="POST">
+                <input type="hidden" name="method" value="add">
+                <label>username: </label><input type="text" name="username"></input><br>
+                <label>password: </label><input type="password" name="password"></input>
+                <input type="submit" value="add">
+              </form>
             </div>
           </div>
+          <div class="col-md-6">
+            ACL:
+            <ul>
+              {{range .ACL}}
+              <li>
+                <p><strong>Match:</strong>
+                  <ul>
+                    {{with $Account := .Match.Account }}<li><strong>Account:</strong> {{$Account}}</li>{{end}}
+                    {{with $Type := .Match.Type }}<li><strong>Type:</strong> {{$Type}}</li>{{end}}
+                    {{with $Name := .Match.Name }}<li><strong>Name:</strong> {{$Name}}</li>{{end}}
+                    {{with $IP := .Match.IP }}<li><strong>IP:</strong> {{$IP}}</li>{{end}}
+                  </ul>
+                </p>
+                {{with $Actions := .Actions }}<p><strong>Actions:</strong> {{$Actions}}</p>{{end}}
+                {{with $Comment := .Comment }}<p><strong>Comment:</strong> {{$Comment}}</p>{{end}}
+              </li>
+              {{end}}
+            </ul>
+          </div>
         </div>
-        {{end}}
       </div>
     </div>
 

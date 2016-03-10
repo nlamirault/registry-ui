@@ -11,8 +11,6 @@ users:
     password: $2y$05$qvO1BVml.zOXfKgp5ZLKie1DoL8xo5c3IbkiVHzwisLyFqlzqLFLa
   jgsqware:
     password: $2y$05$oGKwJ8QJDLBOoTBmC/EQiefIMV1N9Yt9jpX3SqMoRqZRRql6q7yym
-  julien:
-    password: $2a$05$DfLH.wyNPYxzLn05.6wTh.FVrUcFKgUruKTa4MLuCkiksn2vAZqvi
 acl:
 - match:
     account: devops-team
