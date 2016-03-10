@@ -19,7 +19,7 @@
   <body>
     <div class="container-fluid">
       <div class="col-md-6">
-        <div class="page-header">
+  			<div class="page-header">
   				<h1>
   					Docker Registry
           </h1>
@@ -29,53 +29,12 @@
   					<a href="/catalog">Catalog</a>
   				</li>
           {{if .AccountMgmt}}
-  				<li class="active">
+  				<li>
   					<a href="/users">Accounts</a>
   				</li>
           {{end}}
   			</ul>
-        {{with .Data}}
-        <div class="row">
-          <div class="col-md-6">
-            Users:
-            <ul>
-              {{range $name,$p := .Users}}
-              <li>
-                {{if eq $name ""}}Anonymous{{else}}{{$name}}{{end}}<form action="/users" method="POST"><input type="hidden" name="method" value="delete"><input type="hidden" name="username" value="{{$name}}"></input><input type="submit" value="delete"></input></form>
-              </li>
-              {{end}}
-            </ul>
-            <div>
-              <form action="/users" method="POST">
-                <input type="hidden" name="method" value="add">
-                <label>username: </label><input type="text" name="username"></input><br>
-                <label>password: </label><input type="password" name="password"></input>
-                <input type="submit" value="add">
-              </form>
-            </div>
-          </div>
-          <div class="col-md-6">
-            ACL:
-            <ul>
-              {{range .ACL}}
-              <li>
-                <p><strong>Match:</strong>
-                  <ul>
-                    {{with $Account := .Match.Account }}<li><strong>Account:</strong> {{$Account}}</li>{{end}}
-                    {{with $Type := .Match.Type }}<li><strong>Type:</strong> {{$Type}}</li>{{end}}
-                    {{with $Name := .Match.Name }}<li><strong>Name:</strong> {{$Name}}</li>{{end}}
-                    {{with $IP := .Match.IP }}<li><strong>IP:</strong> {{$IP}}</li>{{end}}
-                  </ul>
-                </p>
-                {{with $Actions := .Actions }}<p><strong>Actions:</strong> {{$Actions}}</p>{{end}}
-                {{with $Comment := .Comment }}<p><strong>Comment:</strong> {{$Comment}}</p>{{end}}
-              </li>
-              {{end}}
-            </ul>
-          </div>
-        </div>
-        {{end}}
-      </div>
+		  </div>
     </div>
 
     <script>/*! jQuery v2.1.4 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */

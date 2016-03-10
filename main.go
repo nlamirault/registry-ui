@@ -29,13 +29,16 @@ Repositories [{{.Repositories | len}}]:
 
 var registryURI string
 
+type templateData struct {
+	AccountMgmt bool
+	Data        interface{}
+}
 type image struct {
 	Name string   `json:"name"`
 	Tags []string `json:"tags"`
 }
 
 type catalog struct {
-	AccountMgmt  bool
 	Registry     string
 	Repositories map[string][]image
 }
@@ -44,38 +47,25 @@ type _catalog struct {
 	Repositories []string `json:"repositories"`
 }
 
-type action interface {
-	GetAction() string
-}
-
-func (_catalog) GetAction() string {
-	return "_catalog"
-}
-
-func (image) GetAction() string {
-	return "image"
-}
-
 func renderTemplate(w http.ResponseWriter, tmpl string, p interface{}) error {
+	d := templateData{AccountMgmt: viper.GetBool("account_mgmt_enabled"), Data: p}
+
 	t, err := template.ParseFiles(views + tmpl + ".html")
 	if err != nil {
 		return fmt.Errorf("parsing view %s:%v", tmpl, err)
 	}
-	err = t.Execute(w, p)
+	err = t.Execute(w, d)
 	if err != nil {
 		return fmt.Errorf("rendering view %s:%v", tmpl, err)
 	}
 	return nil
 }
 
-func loadPage(p string) interface{} {
-	switch p {
-	case "catalog":
-		return GetCatalog()
-	case "notfound":
-		return "notfound"
-	default:
-		return nil
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	err := renderTemplate(w, "index", GetCatalog())
+	if err != nil {
+		log.Printf("index handler: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -154,6 +144,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Path("/catalog").HandlerFunc(catalogHandler).Methods("GET")
+	router.Path("/").HandlerFunc(indexHandler).Methods("GET")
 	router.Path("/users").HandlerFunc(usersHandler).Methods("GET", "POST")
 	http.Handle("/", router)
 	http.ListenAndServe(s, nil)
@@ -206,7 +197,6 @@ func GetCatalog() catalog {
 	}
 
 	var c catalog
-	c.AccountMgmt = viper.GetBool("account_mgmt_enabled")
 	c.Registry = registryURI
 	c.Repositories = make(map[string][]image)
 	for _, repository := range d.Repositories {
