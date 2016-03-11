@@ -1,0 +1,18 @@
+.div-square {
+  float:left;
+  width: 2%;
+  padding-bottom: 2%; /* = width for a 1:1 aspect ratio */
+  margin:0.2%;
+}
+.div-square-green{
+  background-color: green;
+}
+.div-square-orange{
+  background-color: orange;
+}
+.div-square-red{
+  background-color: red;
+}
+.div-square-black{
+  background-color: black;
+}

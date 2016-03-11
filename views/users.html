@@ -1,29 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Docker Registry</title>
-
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
-  <script type="text/javascript" src="styles/jquery.min.js"></script>
-  <script type="text/javascript" src="styles/bootstrap.min.js"></script>
-
-</head>
-
-<body>
-  <div class="container-fluid">
-    <div class="col-md-6">
-      <div class="page-header">
-        <h1>
-  					Docker Registry
-          </h1>
-      </div>
+{{template "header"}}
       <ul class="nav nav-pills">
-        <li>
+        <li >
           <a href="/catalog">Catalog</a>
         </li>
         {{if .AccountMgmt}}
@@ -83,9 +60,4 @@
         </div>
       </div>
       {{end}}
-    </div>
-  </div>
-
-</body>
-
-</html>
+{{template "footer"}}

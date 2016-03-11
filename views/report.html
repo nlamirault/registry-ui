@@ -1,0 +1,45 @@
+{{template "header"}}
+      <ul class="nav nav-pills">
+        <li >
+          <a href="/catalog">Catalog</a>
+        </li>
+        {{if .AccountMgmt}}
+        <li>
+          <a href="/users">Accounts</a>
+        </li>
+        {{end}}
+      </ul>
+      {{$HyperclairReport := .HyperclairReport}}
+      {{with .Data}}
+      <div class="row">
+        <div class="col-md-6">
+          <h3>Vulnerability Report <small>{{.String}}</small></h3>
+          {{range .Layers}}
+          {{range .Vulnerabilities}}
+          {{if eq .Priority "Low"}}
+          <a href="{{.Link}}" target="_blank">
+            <div class="div-square div-square-green" data-toggle="tooltip" title="{{.ID}}"></div>
+          </a>
+          {{end}}
+          {{if eq .Priority "Medium"}}
+          <a href="{{.Link}}" target="_blank">
+            <div class="div-square div-square-orange" data-toggle="tooltip" title="{{.ID}}"></div>
+          </a>
+          {{end}}
+          {{if eq .Priority "High"}}
+          <a href="{{.Link}}" target="_blank">
+            <div class="div-square div-square-red" data-toggle="tooltip" title="{{.ID}}"></div>
+          </a>
+          {{end}}
+          {{if eq .Priority "Critical"}}
+          <a href="{{.Link}}" target="_blank">
+            <div class="div-square div-square-black" data-toggle="tooltip" title="{{.ID}}"></div>
+          </a>
+          {{end}}
+          {{end}}
+          {{end}}
+        </div>
+      </div>
+
+      {{end}}
+{{template "footer"}}

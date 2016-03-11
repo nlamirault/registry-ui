@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jgsqware/registry-ui/auth"
 	"github.com/spf13/viper"
+	"github.com/wemanity-belgium/hyperclair/clair"
 )
 
 const views = "views/"
@@ -27,11 +28,14 @@ Repositories [{{.Repositories | len}}]:
 	{{end}}
 `
 
+var templates = template.Must(template.ParseFiles(views+"catalog.html", views+"footer.html", views+"header.html", views+"index.html", views+"report.html", views+"users.html"))
+
 var registryURI string
 
 type templateData struct {
-	AccountMgmt bool
-	Data        interface{}
+	AccountMgmt      bool
+	HyperclairReport bool
+	Data             interface{}
 }
 type image struct {
 	Name string   `json:"name"`
@@ -48,13 +52,8 @@ type _catalog struct {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p interface{}) error {
-	d := templateData{AccountMgmt: viper.GetBool("account_mgmt_enabled"), Data: p}
-
-	t, err := template.ParseFiles(views + tmpl + ".html")
-	if err != nil {
-		return fmt.Errorf("parsing view %s:%v", tmpl, err)
-	}
-	err = t.Execute(w, d)
+	d := templateData{AccountMgmt: viper.GetBool("account_mgmt_enabled"), HyperclairReport: viper.GetBool("hyperclair_report_enabled"), Data: p}
+	err := templates.ExecuteTemplate(w, tmpl+".html", d)
 	if err != nil {
 		return fmt.Errorf("rendering view %s:%v", tmpl, err)
 	}
@@ -62,17 +61,46 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p interface{}) error {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Index Handler")
 	err := renderTemplate(w, "index", GetCatalog())
 	if err != nil {
 		log.Printf("index handler: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+func reportsHandler(w http.ResponseWriter, r *http.Request) {
 
+}
 func catalogHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Catalog Handler")
 	err := renderTemplate(w, "catalog", GetCatalog())
 	if err != nil {
 		log.Printf("catalog handler: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func reportHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Report Handler")
+
+	reg := r.FormValue("registry")
+	image := r.FormValue("image")
+	tag := r.FormValue("reference")
+	if tag == "" {
+		tag = "latest"
+	}
+	url := "http://hyperclair:9999/v1/" + image + "/analysis?realm=" + reg + "&reference=" + tag
+	fmt.Println("url: " + url)
+	var t clair.ImageAnalysis
+	b := doRequest(http.MethodGet, url)
+
+	if err := json.Unmarshal(b, &t); err != nil {
+		log.Fatalf("marshalling result: ", err)
+	}
+
+	err := renderTemplate(w, "report", t)
+	if err != nil {
+		log.Printf("report handler: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -144,6 +172,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Path("/catalog").HandlerFunc(catalogHandler).Methods("GET")
+	router.Path("/report").HandlerFunc(reportHandler).Methods("GET")
 	router.Path("/").HandlerFunc(indexHandler).Methods("GET")
 	router.Path("/users").HandlerFunc(usersHandler).Methods("GET", "POST")
 	router.PathPrefix("/css").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir("./views/static/css"))))
