@@ -31,6 +31,7 @@ Repositories [{{.Repositories | len}}]:
 var templates = template.Must(template.ParseFiles(views+"catalog.html", views+"footer.html", views+"header.html", views+"index.html", views+"report.html", views+"users.html"))
 
 var registryURI string
+var registryProtocol string
 
 type templateData struct {
 	AccountMgmt      bool
@@ -143,6 +144,10 @@ func main() {
 	if registryURI == "" {
 		log.Fatalln("no registry uri provided")
 	}
+	registryProtocol = viper.GetString("hub_protocol")
+	if registryProtocol == "" {
+		registryProtocol = "http"
+	}
 
 	if viper.GetBool("account_mgmt_enabled") {
 		if viper.GetString("account_mgmt_config") == "" {
@@ -222,7 +227,7 @@ func doRequest(method string, uri string) []byte {
 
 func GetCatalog() catalog {
 	var d _catalog
-	b := doRequest("GET", "http://"+registryURI+"/v2/_catalog")
+	b := doRequest("GET", registryProtocol+"://"+registryURI+"/v2/_catalog")
 	if err := json.Unmarshal(b, &d); err != nil {
 		log.Fatalf("marshalling result: err")
 	}
@@ -243,7 +248,7 @@ func GetCatalog() catalog {
 
 func GetTags(imageName string) image {
 	var i image
-	b := doRequest("GET", "http://"+registryURI+"/v2/"+imageName+"/tags/list")
+	b := doRequest("GET", registryProtocol+"://"+registryURI+"/v2/"+imageName+"/tags/list")
 
 	if err := json.Unmarshal(b, &i); err != nil {
 		log.Fatalf("marshalling result: err")
